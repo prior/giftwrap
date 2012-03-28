@@ -1,0 +1,10 @@
+# tested with python 2.7
+requests==0.10.7
+
+#gevent==0.13.6  # this version does not work well with async -- gotta use devel version below!
+cython==0.15.1
+https://bitbucket.org/denis/gevent/get/745149cd866d.tar.gz
+
+-e git://github.com/prior/utilspy.git@v0.4#egg=utilspy-0.4
+#-e ../../github/utilspy
+
