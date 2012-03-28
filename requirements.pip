@@ -1,4 +1,4 @@
 # tested with python 2.7
--r requirements/core.pip
--r requirements/test.pip
+-r pips/core.pip
+-r pips/test.pip
 
