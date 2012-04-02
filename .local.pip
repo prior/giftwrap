@@ -1,5 +1,4 @@
 # tested with python 2.7
 -r pips/common.pip
--r pips/externals.pip
+-r pips/local.pip
 -r pips/test.pip
-

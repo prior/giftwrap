@@ -1,5 +1,5 @@
-# tested with python 2.7
 nose==1.1.2
 rudolf==0.3
 bottle==0.10.9
+bpython
 
