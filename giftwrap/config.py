@@ -7,7 +7,7 @@ from utils.dict import merge
 class _Config(object):
     ATTRS = ('method','protocol','domain','base_path','sub_path','params','headers','data','timeout','max_retries')
     ADDITIVE_ATTRS = set(('headers','params'))
-    TRUTHY_ATTRS = set(('method', 'protocol', 'domain'))
+    TRUTHY_ATTRS = set(('method', 'protocol', 'domain', 'base_path', 'sub_path'))
 
     @classmethod  # creates properties and works around nameclashing pitfalls
     def _build_attr_properties(kls, fallback):

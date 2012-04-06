@@ -15,15 +15,14 @@ class Exchange(Config):
         'method': lambda x:x.upper(),
         'protocol': lambda x:x.lower(),
         'domain': lambda x:x.lower(),
-        'base_path': lambda x:(x or '').strip('/'),
-        'sub_path': lambda x:(x or '').strip('/') }
+        'base_path': lambda x:((x or '').strip('/').strip() or None),
+        'sub_path': lambda x:((x or '').strip('/').strip() or None) }
 
     def __init__(self, auth, **kwargs):
         super(Exchange, self).__init__(auth, **kwargs)
         self.auth = auth
         self.failures = []
         
-
     @cached_property
     def url(self): return '/'.join(('%s:/'%self.protocol.split('://')[0], self.domain, self.base_path, self.sub_path))
 
@@ -38,8 +37,8 @@ class Exchange(Config):
     def request(self): return self._requests_call(requests.async)
     @property
     def triggered(self): return is_cached(self,'response')
-    @cached_property
 
+    @cached_property
     def result(self): return self._process_response()
 
     # force a synchronous retry if we're not over the limit
@@ -52,15 +51,15 @@ class Exchange(Config):
         return self._process_response()
 
     def _process_response(self):
-            try:
-                self.response.raise_for_status()
-            except requests.exceptions.Timeout as err:
-                return self._retry_or_fail(error.TimeoutError(err=err, exchange=self))
-            except requests.exceptions.RequestException as err:
-                return self._retry_or_fail(error.RequestError(err=err, exchange=self))
-            if not self.response.status_code or self.response.status_code < 200 or self.response.status_code >= 300:
-                return self._retry_or_fail(error.ResponseError(err=err, exchange=self))
-            return self.process_response(self.response)
+        try:
+            self.response.raise_for_status()
+        except requests.exceptions.Timeout as err:
+            return self._retry_or_fail(error.TimeoutError(err=err, exchange=self))
+        except requests.exceptions.RequestException as err:
+            return self._retry_or_fail(error.RequestError(err=err, exchange=self))
+        if not self.response.status_code or self.response.status_code < 200 or self.response.status_code >= 300:
+            return self._retry_or_fail(error.ResponseError(err=err, exchange=self))
+        return self.process_response(self.response)
 
     def process_response(self,response): raise NotImplementedError()
 
@@ -71,4 +70,28 @@ class Exchange(Config):
         for exchange,response in zip(exchanges, requests.async.map([e.request for e in exchanges if not e.triggered])):
             exchange.response = response
         return exchanges
+
+
+
+
+    ## to enable mockability
+
+    #@classmethod
+    #def mockify(kls, response=None, result=None):
+        #kls._old_init = kls.__init__
+        #kls.__init__ = kls._mockify_init
+        #kls._mock_response = response
+        #kls._mock_result = result
+
+    #def unmockify(kls):
+        #if kls.__init__ == kls._mockify_init:
+            #kls.__init__ = kls._old_init__
+
+    #def _mockify_init(self, *args, **kwargs):
+        #mock_response = self.kwargs.pop('response',getattr(self.__class__,'_mock_response',None))
+        #mock_result = self.kwargs.pop('result',getattr(self.__class__,'_mock_result',None))
+        #self._old_init(*args, **kwargs)
+        #if self.mock_response: self.response = mock_response
+        #if self.mock_result: self.result = mock_result
+
 

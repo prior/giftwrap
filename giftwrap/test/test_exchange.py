@@ -26,6 +26,8 @@ class TestExchange(Exchange):
     sub_path = 'mirror/create'
     def process_response(self, response): return json.loads(response.content)
 
+class TestExchange2(Exchange): pass
+
 
 def webserver():
     from bottle import route, run, request
@@ -89,14 +91,14 @@ class ExchangeTest(unittest.TestCase):
             for l in (True, False):
                 for m,z in zip(possibles,final_possibles):
                     for n,w in zip(possibles, final_possibles):
-                        class TestExchangeX(TestExchange): pass
+                        class TestExchangeX(TestExchange2): pass
                         if l:
                             if k is not None: setattr(TestExchangeX, attr, k)
                         else:
                             if k is not None: setattr(TestExchangeX, attr, lambda self: k)
                         auth = Auth()
                         if n is not None: setattr(auth,attr,n)
-                        self.assertEquals(n is None and default or n is not None and n, getattr(auth,attr,None))
+                        self.assertEquals(default if n is None else n, getattr(auth,attr,None))
                         ex = TestExchangeX(auth, **{attr:m})
                         self.assertEquals(first_not_none( (z,x,w), default), getattr(ex, attr))
 
@@ -118,18 +120,16 @@ class ExchangeTest(unittest.TestCase):
                         self.assertEquals( merge({}, n or {}, k or {}, m or {}), getattr(ex, attr))
 
     def test_calcs(self): 
-        base_paths = ('/v1/whatever/','/base/path','')
-        sub_paths = ('/create','','show/')
         self._test_expected_attr('method', TEST_METHODS, DefaultConfig.method)
         self._test_expected_attr('protocol', ('http','https'), DefaultConfig.protocol)
         self._test_expected_attr('domain', ('app.localhost','app.hubspotqa.com','app.hubspot.com'), add_none=False)
-        self._test_expected_attr('base_path', base_paths , '', final_possibles=('v1/whatever','base/path',''))
-        self._test_expected_attr('sub_path', sub_paths, '', final_possibles=('create','','show'))
+        self._test_expected_attr('base_path', ('/v1/whatever/','/base/path','') , None, final_possibles=('v1/whatever','base/path',None))
+        self._test_expected_attr('sub_path', ('/create','','show/'), None, final_possibles=('create',None,'show'))
         self._test_expected_attr('data', TEST_DATAS)
         self._test_expected_attr('timeout', (10,20,30), DefaultConfig.timeout)
         self._test_expected_attr('max_retries', (0,1,2), DefaultConfig.max_retries)
         
-        ##TODO: make it possible to use params as they can be used (i.e. multiple values per key -- i.e. MultiDict)
+        ###TODO: make it possible to use params as they can be used (i.e. multiple values per key -- i.e. MultiDict)
         self._test_additive_attr('params', TEST_PARAMS)
         self._test_additive_attr('headers', TEST_HEADERS)
 
@@ -176,7 +176,7 @@ class ExchangeTest(unittest.TestCase):
         count = 5
         for async in (True,False):
             exs = [TestExchange(TestAuth(), params={'i':str(i), 'async':str(async)}) for i in xrange(count)]
-            for ex,i in zip(Exchange.bulk_exchange(exs, async=async), xrange(count)):
+            for ex,i in zip(Exchange.async_exchange(exs, async=async), xrange(count)):
                 self.assertEquals([str(i)],ex.result['params']['i'])
                 self.assertEquals([str(async)],ex.result['params']['async'])
 
