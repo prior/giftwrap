@@ -5,6 +5,8 @@ from .config import Config
 from . import error
 
 
+#TODO: make it super easy to debug by adding debug=True to your own exchanges - make it another class/method/ attribute
+
 #NOTE:retry logic and async logic should not be used together yet-- not thought through
 
 # A single exchange with an api.  Built to only be run once-- do not reuse, just instantiate another.  All specific API exchanges will inherit from this, and need only implement process_response.
