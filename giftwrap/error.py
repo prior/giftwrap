@@ -1,4 +1,5 @@
 from utils.exception import Error as BaseError
+from utils.property import is_cached
 
 class Error(BaseError): pass
 
@@ -8,10 +9,11 @@ class ExchangeError(Error):
         self.exchange = exchange
 
     def __unicode__(self):
-        url = '???'
-        try: url = self.exchange.url
+        url = '?'
+        try: 
+            url = self.exchange.url
         except: pass
-        return u'%s(url=%s):%s' % (self.msg, url, self.wrapped_error_str)
+        return u'%s (url=%s ) %s' % (self.msg, url, self.wrapped_error_str)
     def __repr__(self):
         return '%s(%s, %s, %s)' % (self.__class__.__name__, repr(self.msg), repr(self.err), repr(self.exchange))
 
@@ -20,23 +22,25 @@ class RequestError(ExchangeError):
 
 class TimeoutError(ExchangeError): 
     def __unicode__(self):
-        url = '???'
-        timeout = '???'
+        url = '?'
+        timeout = '?'
         try: 
             url = self.exchange.url
             timeout = self.exchange.timeout
         except: pass
-        return u'%s(url=%s,timeout=%s):%s' % (self.msg, url, timeout, self.wrapped_error_str)
+        return u'%s (url=%s timeout=%s ) %s' % (self.msg, url, timeout, self.wrapped_error_str)
 
 class ResponseError(ExchangeError):
     def __unicode__(self):
-        url = '???'
-        status_code = '???'
+        url = '?'
+        status_code = '?'
+        text = '?'
         try: 
-            url = self.exchange._url
+            url = self.exchange.url
             status_code = self.exchange.response.status_code
+            text = self.exchange.response.content
         except: pass
-        return u'%s(%s url=%s):%s' % (self.msg, status_code, url, self.wrapped_error_str)
+        return u'%s (%s url=%s %s ) %s' % (self.msg, status_code, url, text, self.wrapped_error_str)
 
 class JsonParseError(ResponseError): 
     def __unicode__(self):

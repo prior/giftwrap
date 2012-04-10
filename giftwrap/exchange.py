@@ -56,6 +56,8 @@ class Exchange(Config):
         except requests.exceptions.Timeout as err:
             return self._retry_or_fail(error.TimeoutError(err=err, exchange=self))
         except requests.exceptions.RequestException as err:
+            if is_cached(self,'response') and (self.response.status_code < 200 or self.response.status_code >= 300):
+                return self._retry_or_fail(error.ResponseError(err=err, exchange=self))
             return self._retry_or_fail(error.RequestError(err=err, exchange=self))
         if not self.response.status_code or self.response.status_code < 200 or self.response.status_code >= 300:
             return self._retry_or_fail(error.ResponseError(err=err, exchange=self))
@@ -66,32 +68,26 @@ class Exchange(Config):
 
     # no need to do synchronous batch calls, cuz they happen automaticaly lazily-- only need to be proactive with asynchronous calls
     @classmethod
-    def async_exchange(kls, exchanges, async=True):
+    def async_exchanges(kls, exchanges):
         for exchange,response in zip(exchanges, requests.async.map([e.request for e in exchanges if not e.triggered])):
             exchange.response = response
         return exchanges
 
+    @classmethod
+    def bulk_exchanges(kls, exchanges, async=True):
+        if async: return kls.async_exchange(exchanges)
+        [e.response for e in exchanges]
+        return exchanges
 
+    # for backward compatability
+    async_exchange = async_exchanges
+    bulk_exchange = bulk_exchanges
 
+    @classmethod
+    def async_results(kls, exchanges):
+        return [e.result for e in kls.async_exchanges(exchanges)]
 
-    ## to enable mockability
-
-    #@classmethod
-    #def mockify(kls, response=None, result=None):
-        #kls._old_init = kls.__init__
-        #kls.__init__ = kls._mockify_init
-        #kls._mock_response = response
-        #kls._mock_result = result
-
-    #def unmockify(kls):
-        #if kls.__init__ == kls._mockify_init:
-            #kls.__init__ = kls._old_init__
-
-    #def _mockify_init(self, *args, **kwargs):
-        #mock_response = self.kwargs.pop('response',getattr(self.__class__,'_mock_response',None))
-        #mock_result = self.kwargs.pop('result',getattr(self.__class__,'_mock_result',None))
-        #self._old_init(*args, **kwargs)
-        #if self.mock_response: self.response = mock_response
-        #if self.mock_result: self.result = mock_result
-
-
+    @classmethod
+    def bulk_results(kls, exchanges, async=True):
+        return [e.result for e in kls.bulk_exchanges(exchanges, async)]
+    
