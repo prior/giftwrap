@@ -10,30 +10,28 @@ class _Config(object):
     TRUTHY_ATTRS = set(('method', 'protocol', 'domain', 'base_path', 'sub_path'))
 
     @classmethod  # creates properties and works around nameclashing pitfalls
-    def _build_attr_properties(kls, fallback):
+    def _build_attr_properties(kls):
         if kls.__dict__.get('_built'): return 
         for attr in kls.ATTRS:
-            def _tmp(self, attr, klass_value, default_value, cleanup_method):
+            def _tmp(self, attr, klass_value, cleanup_method):
                 if hasattr(klass_value, '__call__'):
                     klass_value = klass_value(self)
-
                 instance_value = self._init_kwargs.get(attr,None)
                 val = None
                 if attr in kls.ADDITIVE_ATTRS:
-                    val = merge({}, default_value, klass_value, instance_value)
+                    val = merge({}, getattr(self.fallthrough,attr,{}), klass_value, instance_value)
                 elif attr in kls.TRUTHY_ATTRS:
-                    val = instance_value or klass_value or default_value
+                    val = instance_value or klass_value or getattr(self.fallthrough,attr,None)
                 else:
                     if instance_value is not None: val=instance_value
                     elif klass_value is not None: val=klass_value
-                    else: val = default_value
+                    else: val = getattr(self.fallthrough,attr,None)
                 return cleanup_method(val)
             klass_value = getattr(kls,attr,None)
             #if hasattr(klass_value, '__call__'):
                 #klass_value = setattr(kls, '__exchange_%s'%attr, klass_value)
-            default_value = getattr(fallback,attr,None)
             cleanup_method = getattr(kls,'ATTR_CLEANUPS',{}).get(attr,lambda x:x)
-            setattr(kls,attr,cached_property(_tmp,attr,attr,klass_value,default_value,cleanup_method))
+            setattr(kls,attr,cached_property(_tmp,attr,attr,klass_value,cleanup_method))
         kls._built=True
 
     def __init__(self, *args, **kwargs):
@@ -42,9 +40,10 @@ class _Config(object):
 
 
 class Config(_Config):
-    def __init__(self, config_fallback=None, *args, **kwargs):
+    def __init__(self, fallthrough=None, *args, **kwargs):
         super(Config, self).__init__(*args, **kwargs)
-        self.__class__._build_attr_properties(config_fallback or DefaultConfig())
+        self.fallthrough = fallthrough or DefaultConfig()
+        self.__class__._build_attr_properties()
 
 
 class DefaultConfig(_Config):

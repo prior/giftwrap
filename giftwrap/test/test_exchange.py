@@ -176,10 +176,19 @@ class ExchangeTest(unittest.TestCase):
         count = 5
         for async in (True,False):
             exs = [TestExchange(TestAuth(), params={'i':str(i), 'async':str(async)}) for i in xrange(count)]
-            for ex,i in zip(Exchange.async_exchange(exs, async=async), xrange(count)):
+            for ex,i in zip(Exchange.async_exchange(exs), xrange(count)):
                 self.assertEquals([str(i)],ex.result['params']['i'])
                 self.assertEquals([str(async)],ex.result['params']['async'])
 
+    def test_different_auth(self):
+        class TestAuth1(Auth):
+            def params(self): return {'key1':'value1'}
+        class TestAuth2(Auth):
+            def params(self): return {'key2':'value2'}
+        class TestExchange1(Exchange): pass
+        class TestExchange2(Exchange): pass
+        self.assertEquals({'key1':'value1'},TestExchange1(TestAuth1()).params)
+        self.assertEquals({'key2':'value2'},TestExchange1(TestAuth2()).params)
 
 
 
