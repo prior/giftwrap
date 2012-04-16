@@ -8,7 +8,7 @@ import time
 from ..exchange import Exchange
 from ..config import DefaultConfig
 from ..auth import Auth
-from ..error import TimeoutError
+from ..error import TimeoutError,ResponseError
 from utils.list import first_not_none
 from utils.dict import merge
 
@@ -30,7 +30,7 @@ class TestExchange2(Exchange): pass
 
 
 def webserver():
-    from bottle import route, run, request
+    from bottle import route, run, request, error
 
     @route('/blah/v1/mirror/:extra', method='GET')
     def get(extra): return mirror(extra)
@@ -40,6 +40,9 @@ def webserver():
     def putextra(extra): return mirror(extra)
     @route('/blah/v1/mirror/:extra', method='DELETE')
     def delete(extra): return mirror(extra)
+
+    @error(404)
+    def bad(code): return 'bad'
 
     @route('/sleep/:ms', method='GET')
     def sleep(ms):
@@ -135,7 +138,7 @@ class ExchangeTest(unittest.TestCase):
 
 
     def test_timeouts(self):
-        self.assertTrue(TestExchange(TestAuth(), timeout=0.005).result)
+        self.assertTrue(TestExchange(TestAuth(), timeout=0.5).result)
         with self.assertRaises(TimeoutError):
             self.assertTrue(TestExchange(TestAuth(), timeout=0.00001).result)
 
@@ -190,5 +193,23 @@ class ExchangeTest(unittest.TestCase):
         self.assertEquals({'key1':'value1'},TestExchange1(TestAuth1()).params)
         self.assertEquals({'key2':'value2'},TestExchange1(TestAuth2()).params)
 
+
+
+    def test_bad_url(self):
+        class TestExchange(Exchange):
+            protocol = 'http'
+            domain = 'localhost:8087'
+            base_path = 'bad'
+            ok404 = True
+            def process_error(self, error, response): 
+                if response is not None:
+                    if response.status_code==404:
+                        return self.ok404
+                return False
+            def process_response(self, response): return response.text
+        self.assertEquals('bad',TestExchange(TestAuth()).result)
+        TestExchange.ok404=False
+        with self.assertRaises(ResponseError):
+            self.assertTrue(TestExchange(TestAuth()).result)
 
 

@@ -1,6 +1,6 @@
 import requests
 import requests.async
-from utils.property import cached_property, is_cached
+from utils.property import cached_property, is_cached, cached_value
 from .config import Config
 from . import error
 
@@ -26,7 +26,7 @@ class Exchange(Config):
         self.failures = []
         
     @cached_property
-    def url(self): return '/'.join(('%s:/'%self.protocol.split('://')[0], self.domain, self.base_path, self.sub_path))
+    def url(self): return '/'.join(('%s:/'%self.protocol.split('://')[0], self.domain, self.base_path or '', self.sub_path or ''))
 
     def _requests_call(self, requests_obj):
         return getattr(requests_obj,self.method.lower())(self.url, params=self.params, data=self.data, headers=self.headers, timeout=self.timeout)
@@ -53,19 +53,27 @@ class Exchange(Config):
         return self._process_response()
 
     def _process_response(self):
+        wrapped_error = None
         try:
             self.response.raise_for_status()
         except requests.exceptions.Timeout as err:
-            return self._retry_or_fail(error.TimeoutError(err=err, exchange=self))
-        except requests.exceptions.RequestException as err:
+            wrapped_error = error.TimeoutError(err=err, exchange=self)
+        except BaseException as err:
             if is_cached(self,'response') and (self.response.status_code < 200 or self.response.status_code >= 300):
-                return self._retry_or_fail(error.ResponseError(err=err, exchange=self))
-            return self._retry_or_fail(error.RequestError(err=err, exchange=self))
-        if not self.response.status_code or self.response.status_code < 200 or self.response.status_code >= 300:
-            return self._retry_or_fail(error.ResponseError(err=err, exchange=self))
+                wrapped_error = error.ResponseError(err=err, exchange=self)
+            else:
+                wrapped_error = error.RequestError(err=err, exchange=self)
+        if wrapped_error:
+            print ("UUU:%s"%is_cached(self,'response')) *4
+            if is_cached(self,'response'):
+                print ("UUU:%s"%cached_value(self,'response').status_code) *4
+            if not self.process_error(wrapped_error, cached_value(self,'response')):
+                return self._retry_or_fail(wrapped_error)
         return self.process_response(self.response)
 
     def process_response(self,response): raise NotImplementedError()
+
+    def process_error(self, error, response): return None
 
 
     # no need to do synchronous batch calls, cuz they happen automaticaly lazily-- only need to be proactive with asynchronous calls
