@@ -54,12 +54,7 @@ class Exchange(Config):
 
     def _process_response(self):
         try:
-            print "============="
-            print self.url
-            print "============="
             self.response.raise_for_status()
-            print self.response.text
-            print "============="
         except requests.exceptions.Timeout as err:
             return self._retry_or_fail(error.TimeoutError(err=err, exchange=self))
         except requests.exceptions.RequestException as err:
