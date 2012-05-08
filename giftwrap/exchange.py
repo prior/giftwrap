@@ -79,7 +79,8 @@ class Exchange(Config):
     # no need to do synchronous batch calls, cuz they happen automaticaly lazily-- only need to be proactive with asynchronous calls
     @classmethod
     def async_exchanges(kls, exchanges):
-        for exchange,response in zip(exchanges, requests.async.map([e.request for e in exchanges if not e.triggered])):
+        untriggered_exchanges = [e for e in exchanges if not e.triggered]
+        for exchange,response in zip(untriggered_exchanges, requests.async.map([e.request for e in untriggered_exchanges])):
             exchange.response = response
         return exchanges
 
