@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from distutils.core import setup
 
-VERSION = '1.5.2'
+VERSION = '1.5.3'
 
 setup(
     name='giftwrap',
@@ -11,6 +11,5 @@ setup(
     author_email='prior@cracklabs.com',
     url='https://github.com/prior/giftwrap',
     download_url='https://github.com/prior/giftwrap/tarball/v%s'%VERSION,
-    packages=['giftwrap'],
-    install_requires=[]
+    packages=['giftwrap','giftwrap.exchanges','giftwrap.test'],
 )
