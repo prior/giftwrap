@@ -1,4 +1,4 @@
-import json
+import ujson as json
 from ..exchange import Exchange
 
 
