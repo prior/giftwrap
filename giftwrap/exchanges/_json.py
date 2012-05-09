@@ -1,4 +1,10 @@
-import ujson as json
+try:
+    import ujson as json
+except ImportError:
+    try:
+        import simplejson as json
+    except ImportError:
+        import json
 from ..exchange import Exchange
 
 
