@@ -1,15 +1,22 @@
 #!/usr/bin/env python
-from distutils.core import setup
+from setuptools import setup, find_packages
 
-VERSION = '1.5.5'
+VERSION = '1.5.6'
 
 setup(
     name='giftwrap',
     version=VERSION,
-    description='Python Api Wraping Toolset',
-    author='Michael Prior',
-    author_email='prior@cracklabs.com',
-    url='https://github.com/prior/giftwrap',
-    download_url='https://github.com/prior/giftwrap/tarball/v%s'%VERSION,
-    packages=['giftwrap','giftwrap.exchanges','giftwrap.test'],
+    author='prior',
+    author_email='mprior@hubspot.com',
+    packages=find_packages(),
+    url='https://github.com/HubSpot/giftwrap',
+    download_url='https://github.com/HubSpot/giftwrap/tarball/v%s'%VERSION,
+    license='LICENSE.txt',
+    description='Python Api Wrapping Toolset',
+    long_description=open('README.rst').read(),
+    install_requires=[
+        'requests>=0,<1',
+        'utilspy>=0,<1',
+    ],
+    platforms=['any']
 )
