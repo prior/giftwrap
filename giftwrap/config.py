@@ -1,5 +1,5 @@
-from utils.property import cached_property
-from utils.dict import merge
+from grabbag.property import cached_property
+from grabbag.dict import merge
 
 
 # a class that allows setting of request attrs with uber-flexibility (via any combo of class variable, instance method, constructor parameter, or fallback config)

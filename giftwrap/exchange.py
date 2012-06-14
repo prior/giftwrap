@@ -1,6 +1,6 @@
 import requests
-import requests.async
-from utils.property import cached_property, is_cached, cached_value
+import grequests
+from grabbag.property import cached_property, is_cached, cached_value
 from .config import Config
 from . import error
 
@@ -36,7 +36,7 @@ class Exchange(Config):
         self.request = response.request
         return response
     @cached_property
-    def request(self): return self._requests_call(requests.async)
+    def request(self): return self._requests_call(grequests)
     @property
     def triggered(self): return is_cached(self,'response')
 
@@ -77,7 +77,7 @@ class Exchange(Config):
     @classmethod
     def async_exchanges(kls, exchanges):
         untriggered_exchanges = [e for e in exchanges if not e.triggered]
-        for exchange,response in zip(untriggered_exchanges, requests.async.map([e.request for e in untriggered_exchanges])):
+        for exchange,response in zip(untriggered_exchanges, grequests.map([e.request for e in untriggered_exchanges])):
             exchange.response = response
         return exchanges
 

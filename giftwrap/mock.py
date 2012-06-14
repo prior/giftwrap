@@ -1,5 +1,5 @@
 # caveat:  right now macking of an exchange only works if there are no retries on the exchange
-from utils.property import is_cached
+from grabbag.property import is_cached
 
 
 class MockMixin(object):

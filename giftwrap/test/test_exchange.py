@@ -9,8 +9,8 @@ from ..exchange import Exchange
 from ..config import DefaultConfig
 from ..auth import Auth
 from ..error import TimeoutError,ResponseError
-from utils.list import first_not_none
-from utils.dict import merge
+from grabbag.list import first_not_none
+from grabbag.dict import merge
 
 
 TEST_METHODS = ('GET','POST','PUT','DELETE')

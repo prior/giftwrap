@@ -1,5 +1,5 @@
-from utils.exception import Error as BaseError
-from utils.property import is_cached
+from grabbag.exception import Error as BaseError
+from grabbag.property import is_cached
 
 class Error(BaseError): pass
 

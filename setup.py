@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from setuptools import setup, find_packages
 
-VERSION = '1.5.7'
+VERSION = '1.5.8'
 
 setup(
     name='giftwrap',
@@ -16,7 +16,8 @@ setup(
     long_description=open('README.rst').read(),
     install_requires=[
         'requests>=0,<1',
-        'utilspy>=0,<1',
+        'grequests>=0,<1',
+        'grabbag>=0,<1',
     ],
     platforms=['any']
 )
