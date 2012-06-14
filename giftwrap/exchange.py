@@ -64,9 +64,6 @@ class Exchange(Config):
             else:
                 wrapped_error = error.RequestError(err=err, exchange=self)
         if wrapped_error:
-            print ("UUU:%s"%is_cached(self,'response')) *4
-            if is_cached(self,'response'):
-                print ("UUU:%s"%cached_value(self,'response').status_code) *4
             if not self.process_error(wrapped_error, cached_value(self,'response')):
                 return self._retry_or_fail(wrapped_error)
         return self.process_response(self.response)
