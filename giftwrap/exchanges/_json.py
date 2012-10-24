@@ -13,8 +13,11 @@ class JsonExchange(Exchange):
 
     def process_response(self, response): 
         data = None
-        if response.text and response.text.strip():
-            data = json.loads(response.text)
+        if response.encoding is None:
+            response.encoding = "utf-8"
+        text = (response.text or '').strip()
+        if text:
+            data = json.loads(text)
         return self.process_data(data, response)
 
     def process_data(self, data, response): return NotImplementedError()
@@ -25,5 +28,4 @@ class JsonExchange(Exchange):
         return json.dumps(self.python_data())
         
     def python_data(self): return None
-
 
